@@ -17,7 +17,13 @@ TARBALL="$DIST_DIR/agent-sushi-${VERSION}.tar.gz"
 rm -rf "$BUILD_DIR" "$DIST_DIR"
 mkdir -p "$BUILD_DIR" "$DIST_DIR" "$PKG_DIR"
 
-xcodebuild -project "$ROOT_DIR/AgentSushi.xcodeproj" -scheme AgentSushi -configuration Release -derivedDataPath "$ROOT_DIR/.DerivedDataRelease" build
+xcodebuild \
+  -project "$ROOT_DIR/AgentSushi.xcodeproj" \
+  -scheme AgentSushi \
+  -configuration Release \
+  -derivedDataPath "$ROOT_DIR/.DerivedDataRelease" \
+  CODE_SIGNING_ALLOWED=NO \
+  build
 
 FOUND_APP=$(find "$ROOT_DIR/.DerivedDataRelease" -name "AgentSushi.app" -type d | head -n 1)
 if [ -z "$FOUND_APP" ]; then
