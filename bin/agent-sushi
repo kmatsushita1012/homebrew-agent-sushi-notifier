@@ -20,6 +20,38 @@ ensure_codex_config() {
   touch "$CODEX_CONFIG"
 }
 
+ensure_top_level_notify() {
+  local desired='notify = ["zsh", "-lc", "source ~/.sushi-arrived/hook.zsh; agent_sushi_notify"]'
+  python3 - "$CODEX_CONFIG" "$desired" <<'PY'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+desired = sys.argv[2]
+lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+# Remove old Agent Sushi/notify variants so we can place a single top-level line.
+filtered = []
+for line in lines:
+    s = line.strip()
+    if s == "# Agent Sushi" or s == "[hooks]":
+        continue
+    if "agent_sushi_notify" in s:
+        continue
+    filtered.append(line)
+
+# Insert near top-level config area.
+insert_idx = 0
+for i, line in enumerate(filtered):
+    if line.startswith("model_reasoning_effort"):
+        insert_idx = i + 1
+        break
+
+filtered.insert(insert_idx, desired)
+path.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+PY
+}
+
 activate() {
   mkdir -p "$CONFIG_DIR"
   cat > "$HOOK_PATH" <<'HOOK'
@@ -126,13 +158,7 @@ PY
 HOOK
 
   ensure_codex_config
-  if ! grep -q "agent_sushi_notify" "$CODEX_CONFIG"; then
-    cat >> "$CODEX_CONFIG" <<'CFG'
-
-# Agent Sushi
-notify = ["zsh", "-lc", "source ~/.sushi-arrived/hook.zsh; agent_sushi_notify"]
-CFG
-  fi
+  ensure_top_level_notify
 
   # Unsigned local cask builds can be blocked by Gatekeeper as "damaged".
   # Remove quarantine attribute as a pragmatic workaround for local distribution.
@@ -146,12 +172,21 @@ CFG
 deactivate() {
   rm -f "$HOOK_PATH"
   if [ -f "$CODEX_CONFIG" ]; then
-    awk '
-      BEGIN { skip=0 }
-      /^# Agent Sushi$/ { skip=1; next }
-      skip==1 && /^notify = \["zsh", "-lc", "source ~\/\.sushi-arrived\/hook\.zsh; agent_sushi_notify"\]$/ { skip=0; next }
-      skip==0 { print }
-    ' "$CODEX_CONFIG" > "$CODEX_CONFIG.tmp" && mv "$CODEX_CONFIG.tmp" "$CODEX_CONFIG"
+    python3 - "$CODEX_CONFIG" <<'PY'
+from pathlib import Path
+import sys
+path = Path(sys.argv[1])
+lines = path.read_text(encoding="utf-8").splitlines()
+out = []
+for line in lines:
+    s = line.strip()
+    if s == "# Agent Sushi" or s == "[hooks]":
+        continue
+    if "agent_sushi_notify" in s:
+        continue
+    out.append(line)
+path.write_text("\n".join(out) + "\n", encoding="utf-8")
+PY
   fi
   echo "agent-sushi deactivated"
 }
