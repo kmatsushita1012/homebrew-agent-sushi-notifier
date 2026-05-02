@@ -6,8 +6,8 @@ final class AudioPlayer: NSObject, AVAudioPlayerDelegate {
 
     func playJingle(onFinish: @escaping () -> Void) {
         self.onFinish = onFinish
-        guard let url = Bundle.main.url(forResource: "soft-003", withExtension: "mp3", subdirectory: "Resources/Audio")
-              ?? Bundle.main.url(forResource: "soft-003", withExtension: "mp3") else {
+        guard let url = Bundle.main.url(forResource: "jingle", withExtension: "mp3", subdirectory: "Resources/Audio")
+              ?? Bundle.main.url(forResource: "jingle", withExtension: "mp3") else {
             onFinish()
             return
         }
