@@ -35,18 +35,41 @@ codex_dir = home / ".codex"
 history = codex_dir / "history.jsonl"
 config = codex_dir / "config.toml"
 out = home / ".sushi-arrived" / "current.json"
+sessions_dir = home / ".sushi-arrived" / "sessions"
+sessions_dir.mkdir(parents=True, exist_ok=True)
 
 title = "タスク"
 model = "unknown"
+session_id = "unknown"
 
 if history.exists():
     try:
-        lines = history.read_text(encoding="utf-8").strip().splitlines()
-        if lines:
-            last = json.loads(lines[-1])
-            text = (last.get("text") or "").strip()
-            if text:
-                title = text.replace("\n", " ")[:120]
+        records = []
+        for line in history.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+                records.append(obj)
+            except Exception:
+                pass
+
+        # まず最新レコードの session_id を特定し、その session 内の最新 text を採用
+        for rec in reversed(records):
+            sid = rec.get("session_id")
+            if sid:
+                session_id = sid
+                break
+
+        if session_id != "unknown":
+            for rec in reversed(records):
+                if rec.get("session_id") != session_id:
+                    continue
+                text = (rec.get("text") or "").strip()
+                if text:
+                    title = text.replace("\n", " ")[:120]
+                    break
     except Exception:
         pass
 
@@ -59,7 +82,9 @@ if config.exists():
     except Exception:
         pass
 
-out.write_text(json.dumps({"title": title, "model": model}, ensure_ascii=False), encoding="utf-8")
+payload = {"title": title, "model": model, "session_id": session_id}
+out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+(sessions_dir / f"{session_id}.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 PY
   open -a SushiArrived || true
 }
