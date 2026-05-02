@@ -1,6 +1,6 @@
 cask "agent-sushi" do
-  version "0.1.0"
-  sha256 "ae0a468ff97aa2f8dae5352fed72d3d24f6dac1477bf3df0c8896b54fbe0eac7"
+  version "0.1.1"
+  sha256 "f68ba043c9fa0b4124ba474c0c2f0a9456a8f3c93f1d900ce5b15e3fbbb79b74"
 
   url "https://github.com/kmatsushita1012/agent-sushi/releases/download/v#{version}/agent-sushi-#{version}.tar.gz"
   name "Agent Sushi"
