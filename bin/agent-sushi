@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_NAME="SushiArrived"
+BUNDLE_ID="com.matsushita.AgentSushi"
+CONFIG_DIR="$HOME/.sushi-arrived"
+HOOK_PATH="$CONFIG_DIR/hook.zsh"
+CODEX_CONFIG="$HOME/.codex/config.toml"
+
+usage() {
+  cat <<USAGE
+Usage:
+  agent-sushi activate
+  agent-sushi deactivate
+USAGE
+}
+
+ensure_codex_config() {
+  mkdir -p "$(dirname "$CODEX_CONFIG")"
+  touch "$CODEX_CONFIG"
+}
+
+activate() {
+  mkdir -p "$CONFIG_DIR"
+  cat > "$HOOK_PATH" <<'HOOK'
+# Agent Sushi hook snippet
+agent_sushi_notify() {
+  mkdir -p "$HOME/.sushi-arrived"
+  if [ -f "$HOME/.sushi-arrived/current.json" ]; then
+    :
+  fi
+  open -a SushiArrived || true
+}
+HOOK
+
+  ensure_codex_config
+  if ! grep -q "agent_sushi_notify" "$CODEX_CONFIG"; then
+    cat >> "$CODEX_CONFIG" <<'CFG'
+
+# Agent Sushi
+[hooks]
+notify = "zsh -lc 'source ~/.sushi-arrived/hook.zsh; agent_sushi_notify'"
+CFG
+  fi
+
+  echo "agent-sushi activated"
+}
+
+deactivate() {
+  rm -f "$HOOK_PATH"
+  if [ -f "$CODEX_CONFIG" ]; then
+    awk '
+      BEGIN { skip=0 }
+      /^# Agent Sushi$/ { skip=1; next }
+      skip==1 && /^\[hooks\]$/ { next }
+      skip==1 && /^notify = "zsh -lc '\''source ~\/\.sushi-arrived\/hook\.zsh; agent_sushi_notify'\''"$/ { skip=0; next }
+      skip==0 { print }
+    ' "$CODEX_CONFIG" > "$CODEX_CONFIG.tmp" && mv "$CODEX_CONFIG.tmp" "$CODEX_CONFIG"
+  fi
+  echo "agent-sushi deactivated"
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  activate) activate ;;
+  deactivate) deactivate ;;
+  *) usage; exit 1 ;;
+esac

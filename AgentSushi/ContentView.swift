@@ -13,13 +13,40 @@ enum SushiTier {
 
     init(model: String) {
         let normalized = model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if ["opus", "gpt-5", "o1", "sonnet-4", "claude-opus"].contains(where: normalized.contains) {
+        if normalized.contains("opus") {
             self = .high
-        } else if ["sonnet", "gpt-4.1", "o3"].contains(where: normalized.contains) {
-            self = .middle
-        } else {
-            self = .low
+            return
         }
+        if normalized.contains("haiku") {
+            self = .low
+            return
+        }
+        if normalized.contains("sonnet") {
+            self = .middle
+            return
+        }
+
+        if normalized.contains("nano") || normalized.contains("mini") {
+            self = .low
+            return
+        }
+
+        // GPT系:
+        // 1) -codex を含むモデルは中間
+        // 2) 無印(例: gpt-5.1)は高性能
+        // 3) その他の無印系も中間
+        if normalized.hasPrefix("gpt-") || normalized.contains(" gpt-") {
+            if normalized.contains("codex") {
+                self = .middle
+            } else if normalized.contains("gpt-5") || normalized.contains("gpt-6") {
+                self = .high
+            } else {
+                self = .middle
+            }
+            return
+        }
+
+        self = .low
     }
 
     var imageName: String {
@@ -65,27 +92,37 @@ final class NotificationLoader {
     }
 }
 
-final class AudioPlayer {
+final class AudioPlayer: NSObject, AVAudioPlayerDelegate {
     private var player: AVAudioPlayer?
+    private var onFinish: (() -> Void)?
 
-    func playJingle() {
+    func playJingle(onFinish: @escaping () -> Void) {
+        self.onFinish = onFinish
         guard let url = Bundle.main.url(forResource: "soft-003", withExtension: "mp3", subdirectory: "Resources/Audio")
               ?? Bundle.main.url(forResource: "soft-003", withExtension: "mp3") else {
+            onFinish()
             return
         }
 
         do {
             player = try AVAudioPlayer(contentsOf: url)
+            player?.delegate = self
             player?.prepareToPlay()
             player?.play()
         } catch {
             // 音声再生失敗時もUI表示は継続する
+            onFinish()
         }
+    }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        onFinish?()
     }
 }
 
 struct ContentView: View {
     let content: DisplayContent
+    let closeAction: () -> Void
     // 調整用: 0.0 ... 1.0 の範囲で相対位置を指定
     private let bottomTextPositionXRatio: CGFloat = 0.50
     private let bottomTextPositionYRatio: CGFloat = 0.75
@@ -102,7 +139,7 @@ struct ContentView: View {
                     .ignoresSafeArea()
                 
                 Button {
-                    
+                    closeAction()
                 } label: {
                     Text("閉じる")
                         .font(.system(size: 36).weight(.semibold))
@@ -128,6 +165,7 @@ struct ContentView: View {
                     )
             }
         }
+        .onExitCommand(perform: closeAction)
     }
 }
 
@@ -135,7 +173,8 @@ struct ContentView: View {
     ContentView(
         content: DisplayContent.from(
             notification: TaskNotification(title: "Authリファクタについての修正案の提案", model: "opus")
-        )
+        ),
+        closeAction: {}
     )
     .frame(width: 1512, height: 982)
 }
@@ -144,7 +183,8 @@ struct ContentView: View {
     ContentView(
         content: DisplayContent.from(
             notification: TaskNotification(title: "CI調整", model: "sonnet")
-        )
+        ),
+        closeAction: {}
     )
     .frame(width: 1512, height: 982)
 }
@@ -153,7 +193,8 @@ struct ContentView: View {
     ContentView(
         content: DisplayContent.from(
             notification: TaskNotification(title: "軽量タスク", model: "haiku")
-        )
+        ),
+        closeAction: {}
     )
     .frame(width: 1512, height: 982)
 }

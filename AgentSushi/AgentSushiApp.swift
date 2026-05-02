@@ -4,24 +4,23 @@ import SwiftUI
 @main
 struct AgentSushiApp: App {
     private let audioPlayer = AudioPlayer()
-    private let displayDuration: TimeInterval = 4.0
 
     var body: some Scene {
         WindowGroup {
             let notification = NotificationLoader.loadCurrentNotification()
             let content = DisplayContent.from(notification: notification)
 
-            ContentView(content: content)
+            ContentView(content: content, closeAction: closeNow)
                 .onAppear {
-                    audioPlayer.playJingle()
-                    configureWindowAndAutoClose()
+                    configureWindow()
+                    audioPlayer.playJingle(onFinish: closeNow)
                 }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
     }
 
-    private func configureWindowAndAutoClose() {
+    private func configureWindow() {
         DispatchQueue.main.async {
             guard let window = NSApp.windows.first else { return }
             window.level = .statusBar
@@ -33,10 +32,10 @@ struct AgentSushiApp: App {
             if let screen = NSScreen.main {
                 window.setFrame(screen.frame, display: true)
             }
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + displayDuration) {
-                NSApp.terminate(nil)
-            }
         }
+    }
+
+    private func closeNow() {
+        NSApp.terminate(nil)
     }
 }
