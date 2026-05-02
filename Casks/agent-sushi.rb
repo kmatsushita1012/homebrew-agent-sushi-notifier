@@ -1,6 +1,6 @@
 cask "agent-sushi" do
-  version "0.1.1"
-  sha256 "f68ba043c9fa0b4124ba474c0c2f0a9456a8f3c93f1d900ce5b15e3fbbb79b74"
+  version "0.1.2"
+  sha256 "c09b5b10cbe47e59305ec2dd63ae78b550b48f40ed29a4718dfbaca8ebc9813c"
 
   url "https://github.com/kmatsushita1012/homebrew-agent-sushi-notifier/releases/download/v#{version}/agent-sushi-#{version}.tar.gz"
   name "Agent Sushi"
