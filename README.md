@@ -1,10 +1,16 @@
 # Agent Sushi
 
-## Install (Homebrew)
+## Install (Homebrew Cask)
 
 ```bash
-brew tap REPO_OWNER/agent-sushi
+brew tap kmatsushita1012/agent-sushi-notifier
 brew install --cask agent-sushi
+```
+
+## One-liner Install (curl)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kmatsushita1012/homebrew-agent-sushi-notifier/main/install.sh | bash
 ```
 
 ## Usage
@@ -17,5 +23,5 @@ agent-sushi deactivate
 ## Release Packaging
 
 ```bash
-./scripts/package_release.sh 0.1.0
+./scripts/package_release.sh 0.1.1
 ```
