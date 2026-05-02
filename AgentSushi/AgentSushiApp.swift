@@ -4,6 +4,7 @@ import SwiftUI
 @main
 struct AgentSushiApp: App {
     private let audioPlayer = AudioPlayer()
+    private let escHandler = EscapeKeyHandler()
 
     var body: some Scene {
         WindowGroup {
@@ -13,6 +14,7 @@ struct AgentSushiApp: App {
             ContentView(content: content, closeAction: closeNow)
                 .onAppear {
                     configureWindow()
+                    escHandler.start(closeAction: closeNow)
                     audioPlayer.playJingle(onFinish: closeNow)
                 }
         }
@@ -36,6 +38,29 @@ struct AgentSushiApp: App {
     }
 
     private func closeNow() {
+        escHandler.stop()
         NSApp.terminate(nil)
+    }
+}
+
+final class EscapeKeyHandler {
+    private var monitor: Any?
+
+    func start(closeAction: @escaping () -> Void) {
+        stop()
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 53 { // Esc
+                closeAction()
+                return nil
+            }
+            return event
+        }
+    }
+
+    func stop() {
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+            self.monitor = nil
+        }
     }
 }
