@@ -12,5 +12,10 @@ fi
 brew tap "${OWNER}/${TAP_REPO_SUFFIX}"
 brew install --cask agent-sushi
 
+# Unsigned local cask build workaround
+if [ -d "/Applications/SushiArrived.app" ]; then
+  xattr -dr com.apple.quarantine "/Applications/SushiArrived.app" 2>/dev/null || true
+fi
+
 echo "Installed agent-sushi"
 echo "Next: agent-sushi activate"

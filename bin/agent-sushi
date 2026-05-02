@@ -26,9 +26,41 @@ activate() {
 # Agent Sushi hook snippet
 agent_sushi_notify() {
   mkdir -p "$HOME/.sushi-arrived"
-  if [ -f "$HOME/.sushi-arrived/current.json" ]; then
-    :
-  fi
+  python3 - <<'PY'
+import json
+from pathlib import Path
+
+home = Path.home()
+codex_dir = home / ".codex"
+history = codex_dir / "history.jsonl"
+config = codex_dir / "config.toml"
+out = home / ".sushi-arrived" / "current.json"
+
+title = "タスク"
+model = "unknown"
+
+if history.exists():
+    try:
+        lines = history.read_text(encoding="utf-8").strip().splitlines()
+        if lines:
+            last = json.loads(lines[-1])
+            text = (last.get("text") or "").strip()
+            if text:
+                title = text.replace("\n", " ")[:120]
+    except Exception:
+        pass
+
+if config.exists():
+    try:
+        for line in config.read_text(encoding="utf-8").splitlines():
+            if line.startswith("model = "):
+                model = line.split("=", 1)[1].strip().strip('"')
+                break
+    except Exception:
+        pass
+
+out.write_text(json.dumps({"title": title, "model": model}, ensure_ascii=False), encoding="utf-8")
+PY
   open -a SushiArrived || true
 }
 HOOK
@@ -38,9 +70,14 @@ HOOK
     cat >> "$CODEX_CONFIG" <<'CFG'
 
 # Agent Sushi
-[hooks]
-notify = "zsh -lc 'source ~/.sushi-arrived/hook.zsh; agent_sushi_notify'"
+notify = ["zsh", "-lc", "source ~/.sushi-arrived/hook.zsh; agent_sushi_notify"]
 CFG
+  fi
+
+  # Unsigned local cask builds can be blocked by Gatekeeper as "damaged".
+  # Remove quarantine attribute as a pragmatic workaround for local distribution.
+  if [ -d "/Applications/SushiArrived.app" ]; then
+    xattr -dr com.apple.quarantine "/Applications/SushiArrived.app" 2>/dev/null || true
   fi
 
   echo "agent-sushi activated"
@@ -52,8 +89,7 @@ deactivate() {
     awk '
       BEGIN { skip=0 }
       /^# Agent Sushi$/ { skip=1; next }
-      skip==1 && /^\[hooks\]$/ { next }
-      skip==1 && /^notify = "zsh -lc '\''source ~\/\.sushi-arrived\/hook\.zsh; agent_sushi_notify'\''"$/ { skip=0; next }
+      skip==1 && /^notify = \["zsh", "-lc", "source ~\/\.sushi-arrived\/hook\.zsh; agent_sushi_notify"\]$/ { skip=0; next }
       skip==0 { print }
     ' "$CODEX_CONFIG" > "$CODEX_CONFIG.tmp" && mv "$CODEX_CONFIG.tmp" "$CODEX_CONFIG"
   fi
