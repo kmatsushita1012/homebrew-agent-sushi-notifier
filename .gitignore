@@ -1,0 +1,13 @@
+# Xcode user/build artifacts
+.DS_Store
+.build/
+DerivedData/
+.DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# SwiftPM
+.swiftpm/
+
+# Local runtime data
+.sushi-arrived/
