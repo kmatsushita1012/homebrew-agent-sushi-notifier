@@ -223,46 +223,26 @@ def find_active_rollout(root: Path):
         if not files:
             return None
 
-    best_file = None
-    best_score = 0
-    now_ts = time.time()
+    # Sort by mtime descending (most recently updated first)
+    files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
 
     for f in files:
-        mtime = f.stat().st_mtime
-
-        # Skip files older than 1 hour (not from current batch of sessions)
-        if now_ts - mtime > 3600:
-            continue
-
         try:
             last_line = read_last_line(f)
             if not last_line:
                 continue
             obj = json.loads(last_line)
-            ts_str = obj.get("timestamp", "")
-            if not ts_str:
-                continue
 
-            dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-            ts = dt.timestamp()
-
-            # Prioritize files ending with task_complete event
-            is_complete = (
+            # Return the first file ending with task_complete
+            if (
                 obj.get("type") == "event_msg"
                 and obj.get("payload", {}).get("type") == "task_complete"
-            )
-            score = ts + (1000000 if is_complete else 0)
-
-            if score > best_score:
-                best_score = score
-                best_file = f
+            ):
+                return f
         except Exception:
-            # On parse failure, fall back to mtime
-            if mtime > best_score:
-                best_score = mtime
-                best_file = f
+            continue
 
-    return best_file
+    return None
 
 rollout = find_active_rollout(sessions_root)
 if rollout and rollout.exists():
