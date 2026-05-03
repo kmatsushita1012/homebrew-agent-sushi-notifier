@@ -4,7 +4,8 @@ final class NotificationLoader {
     private static let fallback: TaskNotification = .high
 
     static func loadCurrentNotification() -> TaskNotification {
-        let path = NSString(string: "~/.agent-sushi/current.json").expandingTildeInPath
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let path = "\(home)/.agent-sushi/current.json"
         let fileURL = URL(fileURLWithPath: path)
 
         guard let data = try? Data(contentsOf: fileURL) else {
