@@ -1,6 +1,6 @@
 # 🍣 Agent Sushi
 
-<video src="docs/images/sushi.mov" controls autoplay muted loop playsinline width="800"></video>
+![demo](docs/movies/sushi.gif)
 
 
 ## Introduction (JA)
