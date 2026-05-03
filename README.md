@@ -87,6 +87,11 @@ agent-sushi deactivate
 - Codex: verified
 - Claude: implementation has been added, but not yet verified because the owner does not have a Claude subscription. PRs for verification are welcome.
 
+## Known Limitations
+
+- **New / recent sessions only**: The notification fires when Codex finishes a task (`task_complete`). However, Codex does not invoke the `notify` hook for sessions that have been idle for several hours (typically after ~2–10 hours). If you return to an old thread and send a message, the hook may not fire even when the task completes.
+- **Workaround**: Start a new chat, or accept that only recently active threads will trigger the notification.
+
 ## Release Packaging
 
 ```bash
