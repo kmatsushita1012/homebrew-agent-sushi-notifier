@@ -1,5 +1,8 @@
 # 🍣 Agent Sushi
 
+<video src="docs/images/sushi.mov" controls autoplay muted loop playsinline width="800"></video>
+
+
 ## Introduction (JA)
 
 回転寿司でタッチパネルを操作していると、  
