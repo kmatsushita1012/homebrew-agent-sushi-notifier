@@ -9,6 +9,10 @@ struct TaskNotification: Codable {
     static let low = TaskNotification(title: "軽量モデルの確認タスクを行なってください", model: "haiku")
     
     static let fallback = TaskNotification(title: "タスク", model: "unknown")
+    
+    static func fallback(message: String) -> TaskNotification {
+        TaskNotification(title: message, model: "unknown")
+    }
 }
 
 enum SushiTier {
