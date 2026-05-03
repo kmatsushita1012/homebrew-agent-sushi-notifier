@@ -31,7 +31,7 @@
 - `install.sh` 追加（curl導線）
 
 ## 4. Homebrew 配布
-- リポジトリ名を `homebrew-agent-sushi-notifier` に統一
+- リポジトリ名を `agent-sushi` に統一
 - Cask: `Casks/agent-sushi.rb`
 - リリース更新:
   - `v0.1.0` 初期

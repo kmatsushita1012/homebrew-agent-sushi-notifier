@@ -345,7 +345,7 @@ PY
   # Kill any existing AgentSushi instance first so the new one reads current.json fresh.
   pkill -x AgentSushi 2>/dev/null || true
   sleep 0.05
-  open -a AgentSushi || true
+  open "/Applications/AgentSushi.app" || true
 }
 HOOK
 
