@@ -166,6 +166,8 @@ activate() {
 # Agent Sushi hook snippet
 agent_sushi_notify() {
   mkdir -p "$HOME/.agent-sushi"
+  # Wait briefly for Codex to finish writing task_complete to disk.
+  sleep 0.5
   python3 - <<'PY'
 import json
 import time
@@ -179,27 +181,41 @@ config = codex_dir / "config.toml"
 out = home / ".agent-sushi" / "current.json"
 sessions_dir = home / ".agent-sushi" / "sessions"
 sessions_dir.mkdir(parents=True, exist_ok=True)
+log = home / ".agent-sushi" / "notify.log"
+
+def log_debug(msg):
+    with log.open("a", encoding="utf-8") as f:
+        f.write(f"{datetime.now().isoformat()} {msg}\n")
 
 title = "タスク"
 model = "unknown"
 session_id = "unknown"
 
-def read_last_line(path: Path) -> str:
-    """Read the last non-empty line of a file efficiently."""
+def read_last_lines(path: Path, n: int = 3) -> list[str]:
+    """Read the last n non-empty lines of a file."""
     with path.open("rb") as f:
         f.seek(0, 2)
         pos = f.tell()
         if pos == 0:
-            return ""
+            return []
         buf = b""
-        while pos > 0:
+        lines = []
+        while pos > 0 and len(lines) < n:
             pos -= 1
             f.seek(pos)
             char = f.read(1)
             if char == b"\n" and buf:
-                return buf.decode("utf-8").strip()
-            buf = char + buf
-        return buf.decode("utf-8").strip()
+                line = buf.decode("utf-8").strip()
+                if line:
+                    lines.insert(0, line)
+                buf = b""
+            else:
+                buf = char + buf
+        if buf:
+            line = buf.decode("utf-8").strip()
+            if line:
+                lines.insert(0, line)
+        return lines
 
 def find_active_rollout(root: Path):
     """Find the rollout file for the most recently completed session."""
@@ -221,27 +237,38 @@ def find_active_rollout(root: Path):
         # Fallback: scan all files if no dated dirs found
         files = list(root.rglob("rollout-*.jsonl"))
         if not files:
+            log_debug("No rollout files found")
             return None
 
     # Sort by mtime descending (most recently updated first)
     files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    log_debug(f"Scanning {len(files)} rollout files")
 
     for f in files:
         try:
-            last_line = read_last_line(f)
-            if not last_line:
-                continue
-            obj = json.loads(last_line)
+            last_lines = read_last_lines(f, 3)
+            log_debug(f"{f.name}: checking {len(last_lines)} trailing lines")
+            for line in last_lines:
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError:
+                    log_debug(f"{f.name}: JSON decode error on: {line[:60]}")
+                    continue
 
-            # Return the first file ending with task_complete
-            if (
-                obj.get("type") == "event_msg"
-                and obj.get("payload", {}).get("type") == "task_complete"
-            ):
-                return f
-        except Exception:
+                # Return the first file ending with task_complete
+                if (
+                    obj.get("type") == "event_msg"
+                    and obj.get("payload", {}).get("type") == "task_complete"
+                ):
+                    log_debug(f"{f.name}: selected (task_complete found)")
+                    return f
+        except Exception as e:
+            log_debug(f"{f.name}: exception {e}")
             continue
 
+    log_debug("No task_complete found in any file")
     return None
 
 rollout = find_active_rollout(sessions_root)
