@@ -1,4 +1,4 @@
-# 🍣 Agent Sushi
+# 🍣 Agent Sushi　Notifier
 
 ## Introduction (JA)
 
