@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OWNER="${1:-kmatsushita1012}"
-TAP_REPO_SUFFIX="agent-sushi-notifier"
+TAP_REPO_SUFFIX="agent-sushi"
 
 if ! command -v brew >/dev/null 2>&1; then
   echo "Homebrew is required. Install from https://brew.sh" >&2

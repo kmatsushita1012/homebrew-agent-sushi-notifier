@@ -6,6 +6,7 @@ BUNDLE_ID="com.matsushita.AgentSushi"
 CONFIG_DIR="$HOME/.sushi-arrived"
 HOOK_PATH="$CONFIG_DIR/hook.zsh"
 CODEX_CONFIG="$HOME/.codex/config.toml"
+CLAUDE_CONFIG="$HOME/.claude/settings.json"
 
 usage() {
   cat <<USAGE
@@ -49,6 +50,113 @@ for i, line in enumerate(filtered):
 
 filtered.insert(insert_idx, desired)
 path.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+PY
+}
+
+ensure_claude_notify() {
+  [ -f "$CLAUDE_CONFIG" ] || return 0
+  python3 - "$CLAUDE_CONFIG" <<'PY'
+from pathlib import Path
+import json
+import sys
+
+path = Path(sys.argv[1])
+notify_cmd = 'zsh -lc "source ~/.sushi-arrived/hook.zsh; agent_sushi_notify"'
+
+try:
+    data = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    # Unknown/invalid format: skip safely.
+    sys.exit(0)
+
+if not isinstance(data, dict):
+    sys.exit(0)
+
+hooks = data.get("hooks")
+if hooks is None:
+    hooks = {}
+    data["hooks"] = hooks
+if not isinstance(hooks, dict):
+    sys.exit(0)
+
+stop = hooks.get("Stop")
+if stop is None:
+    stop = []
+    hooks["Stop"] = stop
+if not isinstance(stop, list):
+    sys.exit(0)
+
+entry = {"hooks": [{"type": "command", "command": notify_cmd}]}
+
+def has_notify(items):
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        hs = item.get("hooks")
+        if not isinstance(hs, list):
+            continue
+        for h in hs:
+            if isinstance(h, dict) and h.get("type") == "command" and "agent_sushi_notify" in str(h.get("command", "")):
+                return True
+    return False
+
+if not has_notify(stop):
+    stop.append(entry)
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PY
+}
+
+remove_claude_notify() {
+  [ -f "$CLAUDE_CONFIG" ] || return 0
+  python3 - "$CLAUDE_CONFIG" <<'PY'
+from pathlib import Path
+import json
+import sys
+
+path = Path(sys.argv[1])
+try:
+    data = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    sys.exit(0)
+
+if not isinstance(data, dict):
+    sys.exit(0)
+hooks = data.get("hooks")
+if not isinstance(hooks, dict):
+    sys.exit(0)
+stop = hooks.get("Stop")
+if not isinstance(stop, list):
+    sys.exit(0)
+
+new_stop = []
+changed = False
+for item in stop:
+    if not isinstance(item, dict):
+        new_stop.append(item)
+        continue
+    hs = item.get("hooks")
+    if not isinstance(hs, list):
+        new_stop.append(item)
+        continue
+    new_hs = []
+    removed = False
+    for h in hs:
+        if isinstance(h, dict) and h.get("type") == "command" and "agent_sushi_notify" in str(h.get("command", "")):
+            removed = True
+            changed = True
+            continue
+        new_hs.append(h)
+    if removed:
+        if new_hs:
+            item = dict(item)
+            item["hooks"] = new_hs
+            new_stop.append(item)
+    else:
+        new_stop.append(item)
+
+if changed:
+    hooks["Stop"] = new_stop
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 PY
 }
 
@@ -159,6 +267,7 @@ HOOK
 
   ensure_codex_config
   ensure_top_level_notify
+  ensure_claude_notify
 
   # Unsigned local cask builds can be blocked by Gatekeeper as "damaged".
   # Remove quarantine attribute as a pragmatic workaround for local distribution.
@@ -188,6 +297,7 @@ for line in lines:
 path.write_text("\n".join(out) + "\n", encoding="utf-8")
 PY
   fi
+  remove_claude_notify
   echo "agent-sushi deactivated"
 }
 

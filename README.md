@@ -1,4 +1,4 @@
-# 🍣 Agent Sushi　Notifier
+# 🍣 Agent Sushi
 
 ## Introduction (JA)
 
@@ -51,14 +51,14 @@ There is basically no practical value.
 ## Install (Homebrew Cask)
 
 ```bash
-brew tap kmatsushita1012/agent-sushi-notifier
+brew tap kmatsushita1012/agent-sushi
 brew install --cask agent-sushi
 ```
 
 ## One-liner Install (curl)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kmatsushita1012/homebrew-agent-sushi-notifier/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kmatsushita1012/agent-sushi/main/install.sh | bash
 ```
 
 ## Usage
@@ -67,6 +67,24 @@ curl -fsSL https://raw.githubusercontent.com/kmatsushita1012/homebrew-agent-sush
 agent-sushi activate
 agent-sushi deactivate
 ```
+
+`activate` は以下を設定します。
+- Codex: `~/.codex/config.toml` のトップレベル `notify`
+- Claude: `~/.claude/settings.json` が存在する場合のみ `hooks.Stop` に command hook を追加
+
+`activate` configures:
+- Codex: top-level `notify` in `~/.codex/config.toml`
+- Claude: adds a command hook to `hooks.Stop` only if `~/.claude/settings.json` exists
+
+## 対応環境
+
+- Codex: 動作確認済み
+- Claude: 実装は追加済みですが、オーナーがClaude未契約のため未検証です。動作確認してPRをくださる方を募集しています。
+
+## Supported Environments
+
+- Codex: verified
+- Claude: implementation has been added, but not yet verified because the owner does not have a Claude subscription. PRs for verification are welcome.
 
 ## Release Packaging
 

@@ -65,4 +65,7 @@
 ## 7. 現状の注意点
 - Codex未導入PCでも `activate` 自体はクラッシュしない設計
 - ただし Codex `notify` 発火元がない場合は自動通知は動作しない
-- Claude連携は未実装（将来対応予定）
+- Claude連携を追加（2026-05-03）
+  - 対象: `~/.claude/settings.json` が存在する場合のみ
+  - `hooks.Stop` に `agent_sushi_notify` command hook を重複なしで追加
+  - JSON形式不正/想定外構造の場合は安全にスキップ（クラッシュさせない）
