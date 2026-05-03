@@ -1,14 +1,14 @@
 # AgentSushi design.md
 
 ## 1. 目的
-`AgentSushi.app` は「表示専用」の macOS SwiftUI アプリとして動作し、`sushi-hook` が作成した `~/.sushi-arrived/current.json` を起動時に読み込んで、回転寿司到着風の全画面通知を数秒表示して自動終了する。
+`AgentSushi.app` は「表示専用」の macOS SwiftUI アプリとして動作し、`sushi-hook` が作成した `~/.agent-sushi/current.json` を起動時に読み込んで、回転寿司到着風の全画面通知を数秒表示して自動終了する。
 
 ---
 
 ## 2. スコープ
 ### 2.1 MVP対象
 - 引数なし起動（`open -a AgentSushi` 前提）
-- 起動時に `~/.sushi-arrived/current.json` を1回読み込み
+- 起動時に `~/.agent-sushi/current.json` を1回読み込み
 - `title` と `model` から表示内容を決定
 - 全画面オーバーレイを最前面表示（3〜5秒）
 - 自動終了
@@ -61,7 +61,7 @@ MVPでは厳密な網羅より「未知は赤身」優先。
 ## 5. Data設計
 
 ### 5.1 入力ファイル
-`~/.sushi-arrived/current.json`
+`~/.agent-sushi/current.json`
 
 ```json
 {
@@ -80,7 +80,7 @@ MVPでは厳密な網羅より「未知は赤身」優先。
   - `func loadCurrent() throws -> TaskNotification`
 
 実装 `FileNotificationRepository`:
-1. `~/.sushi-arrived/current.json` を解決
+1. `~/.agent-sushi/current.json` を解決
 2. UTF-8で読込
 3. JSON decode
 4. Domain Entityへ変換

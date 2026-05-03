@@ -8,7 +8,7 @@
 - `Esc` / 閉じるボタンで早期終了
 - 音再生終了後の自動終了
 - タスク名省略ルール（`...`）と文言整形
-- `~/.sushi-arrived/current.json` 連携
+- `~/.agent-sushi/current.json` 連携
 
 ## 2. データ連携の更新
 - 初期実装: `~/.codex/history.jsonl` 参照
@@ -17,8 +17,8 @@
   - `model`: `turn_context.payload.model`
   - `session_id`: `session_meta.payload.id`
 - 保存先:
-  - `~/.sushi-arrived/current.json`
-  - `~/.sushi-arrived/sessions/<session_id>.json`
+  - `~/.agent-sushi/current.json`
+  - `~/.agent-sushi/sessions/<session_id>.json`
 
 ## 3. CLI / 配布まわり
 - `agent-sushi activate`
@@ -55,7 +55,7 @@
 ## 6. クリーン手順（確認済み）
 1. `brew uninstall --cask agent-sushi`
 2. `brew untap kmatsushita1012/agent-sushi-notifier`
-3. `rm -rf ~/.sushi-arrived`
+3. `rm -rf ~/.agent-sushi`
 4. `~/.codex/config.toml` から `agent_sushi_notify` 関連を削除
 5. 再インストール:
    - `brew tap kmatsushita1012/agent-sushi-notifier`

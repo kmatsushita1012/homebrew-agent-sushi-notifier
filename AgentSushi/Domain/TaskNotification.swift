@@ -7,6 +7,8 @@ struct TaskNotification: Codable {
     static let high = TaskNotification(title: "Please list the tasks for verifying high-performance models.", model: "opus")
     static let middle = TaskNotification(title: "中間モデルの確認タスクを行なってください", model: "sonnet")
     static let low = TaskNotification(title: "軽量モデルの確認タスクを行なってください", model: "haiku")
+    
+    static let fallback = TaskNotification(title: "タスク", model: "unknown")
 }
 
 enum SushiTier {

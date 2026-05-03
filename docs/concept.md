@@ -59,7 +59,7 @@ sushi-hook（ロジック）
 hook → アプリは **ファイル経由**
 保存先：
 
-~/.sushi-arrived/current.json
+~/.agent-sushi/current.json
 
 内容：
 ```json
@@ -74,7 +74,7 @@ hook → アプリは **ファイル経由**
 
 起動時：
 
-1. ~/.sushi-arrived/current.json を読む
+1. ~/.agent-sushi/current.json を読む
 2. タイトル取得
 3. モデルから寿司決定
 4. 表示

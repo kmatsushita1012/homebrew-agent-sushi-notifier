@@ -13,4 +13,4 @@ dist/
 .swiftpm/
 
 # Local runtime data
-.sushi-arrived/
+.agent-sushi/

@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_NAME="AgentSushi"
 BUNDLE_ID="com.matsushita.AgentSushi"
-CONFIG_DIR="$HOME/.sushi-arrived"
+CONFIG_DIR="$HOME/.agent-sushi"
 HOOK_PATH="$CONFIG_DIR/hook.zsh"
 CODEX_CONFIG="$HOME/.codex/config.toml"
 CLAUDE_CONFIG="$HOME/.claude/settings.json"
@@ -22,7 +22,7 @@ ensure_codex_config() {
 }
 
 ensure_top_level_notify() {
-  local desired='notify = ["zsh", "-lc", "source ~/.sushi-arrived/hook.zsh; agent_sushi_notify"]'
+  local desired='notify = ["zsh", "-lc", "source ~/.agent-sushi/hook.zsh; agent_sushi_notify"]'
   python3 - "$CODEX_CONFIG" "$desired" <<'PY'
 from pathlib import Path
 import sys
@@ -61,7 +61,7 @@ import json
 import sys
 
 path = Path(sys.argv[1])
-notify_cmd = 'zsh -lc "source ~/.sushi-arrived/hook.zsh; agent_sushi_notify"'
+notify_cmd = 'zsh -lc "source ~/.agent-sushi/hook.zsh; agent_sushi_notify"'
 
 try:
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -165,31 +165,106 @@ activate() {
   cat > "$HOOK_PATH" <<'HOOK'
 # Agent Sushi hook snippet
 agent_sushi_notify() {
-  mkdir -p "$HOME/.sushi-arrived"
+  mkdir -p "$HOME/.agent-sushi"
   python3 - <<'PY'
 import json
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 
 home = Path.home()
 codex_dir = home / ".codex"
 sessions_root = codex_dir / "sessions"
 config = codex_dir / "config.toml"
-out = home / ".sushi-arrived" / "current.json"
-sessions_dir = home / ".sushi-arrived" / "sessions"
+out = home / ".agent-sushi" / "current.json"
+sessions_dir = home / ".agent-sushi" / "sessions"
 sessions_dir.mkdir(parents=True, exist_ok=True)
 
 title = "タスク"
 model = "unknown"
 session_id = "unknown"
 
-def latest_rollout_file(root: Path):
-    files = list(root.rglob("rollout-*.jsonl"))
-    if not files:
-        return None
-    files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return files[0]
+def read_last_line(path: Path) -> str:
+    """Read the last non-empty line of a file efficiently."""
+    with path.open("rb") as f:
+        f.seek(0, 2)
+        pos = f.tell()
+        if pos == 0:
+            return ""
+        buf = b""
+        while pos > 0:
+            pos -= 1
+            f.seek(pos)
+            char = f.read(1)
+            if char == b"\n" and buf:
+                return buf.decode("utf-8").strip()
+            buf = char + buf
+        return buf.decode("utf-8").strip()
 
-rollout = latest_rollout_file(sessions_root)
+def find_active_rollout(root: Path):
+    """Find the rollout file for the most recently completed session."""
+    now = datetime.now()
+
+    # Scan today and yesterday directories only (date rollover edge case)
+    dirs = []
+    for offset in [0, -1]:
+        d = now + timedelta(days=offset)
+        dir_path = root / str(d.year) / f"{d.month:02d}" / f"{d.day:02d}"
+        if dir_path.exists():
+            dirs.append(dir_path)
+
+    files = []
+    for d in dirs:
+        files.extend(d.glob("rollout-*.jsonl"))
+
+    if not files:
+        # Fallback: scan all files if no dated dirs found
+        files = list(root.rglob("rollout-*.jsonl"))
+        if not files:
+            return None
+
+    best_file = None
+    best_score = 0
+    now_ts = time.time()
+
+    for f in files:
+        mtime = f.stat().st_mtime
+
+        # Skip files older than 1 hour (not from current batch of sessions)
+        if now_ts - mtime > 3600:
+            continue
+
+        try:
+            last_line = read_last_line(f)
+            if not last_line:
+                continue
+            obj = json.loads(last_line)
+            ts_str = obj.get("timestamp", "")
+            if not ts_str:
+                continue
+
+            dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            ts = dt.timestamp()
+
+            # Prioritize files ending with task_complete event
+            is_complete = (
+                obj.get("type") == "event_msg"
+                and obj.get("payload", {}).get("type") == "task_complete"
+            )
+            score = ts + (1000000 if is_complete else 0)
+
+            if score > best_score:
+                best_score = score
+                best_file = f
+        except Exception:
+            # On parse failure, fall back to mtime
+            if mtime > best_score:
+                best_score = mtime
+                best_file = f
+
+    return best_file
+
+rollout = find_active_rollout(sessions_root)
 if rollout and rollout.exists():
     try:
         records = []
@@ -267,6 +342,9 @@ PY
   fi
   open -a Codex >/dev/null 2>&1 || true
   sleep 0.15
+  # Kill any existing AgentSushi instance first so the new one reads current.json fresh.
+  pkill -x AgentSushi 2>/dev/null || true
+  sleep 0.05
   open -a AgentSushi || true
 }
 HOOK
