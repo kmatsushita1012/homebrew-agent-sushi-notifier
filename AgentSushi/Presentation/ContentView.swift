@@ -82,12 +82,12 @@ private struct ContentViewEN: View {
     }
 }
 
-#Preview("JA High") {
-    ContentView(content: DisplayContent.from(notification: .high, language: .ja), closeAction: {})
-        .frame(width: 1512, height: 982)
-}
-
-#Preview("EN Middle") {
-    ContentView(content: DisplayContent.from(notification: .middle, language: .en), closeAction: {})
-        .frame(width: 1512, height: 982)
-}
+//#Preview("JA High") {
+//    ContentView(content: DisplayContent.from(notification: .high, language: .ja), closeAction: {})
+//        .frame(width: 1512, height: 982)
+//}
+//
+//#Preview("EN Middle") {
+//    ContentView(content: DisplayContent.from(notification: .middle, language: .en), closeAction: {})
+//        .frame(width: 1512, height: 982)
+//}
