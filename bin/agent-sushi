@@ -261,6 +261,12 @@ payload = {"title": title, "model": model, "session_id": session_id}
 out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 (sessions_dir / f"{session_id}.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 PY
+  # Best-effort: bring Codex to front first so SushiArrived appears in that context.
+  if command -v osascript >/dev/null 2>&1; then
+    osascript -e 'tell application "Codex" to activate' >/dev/null 2>&1 || true
+  fi
+  open -a Codex >/dev/null 2>&1 || true
+  sleep 0.15
   open -a SushiArrived || true
 }
 HOOK
