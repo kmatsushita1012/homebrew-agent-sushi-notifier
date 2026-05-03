@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_NAME="SushiArrived"
+APP_NAME="AgentSushi"
 BUNDLE_ID="com.matsushita.AgentSushi"
 CONFIG_DIR="$HOME/.sushi-arrived"
 HOOK_PATH="$CONFIG_DIR/hook.zsh"
@@ -261,13 +261,13 @@ payload = {"title": title, "model": model, "session_id": session_id}
 out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 (sessions_dir / f"{session_id}.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 PY
-  # Best-effort: bring Codex to front first so SushiArrived appears in that context.
+  # Best-effort: bring Codex to front first so AgentSushi appears in that context.
   if command -v osascript >/dev/null 2>&1; then
     osascript -e 'tell application "Codex" to activate' >/dev/null 2>&1 || true
   fi
   open -a Codex >/dev/null 2>&1 || true
   sleep 0.15
-  open -a SushiArrived || true
+  open -a AgentSushi || true
 }
 HOOK
 
@@ -277,8 +277,8 @@ HOOK
 
   # Unsigned local cask builds can be blocked by Gatekeeper as "damaged".
   # Remove quarantine attribute as a pragmatic workaround for local distribution.
-  if [ -d "/Applications/SushiArrived.app" ]; then
-    xattr -dr com.apple.quarantine "/Applications/SushiArrived.app" 2>/dev/null || true
+  if [ -d "/Applications/AgentSushi.app" ]; then
+    xattr -dr com.apple.quarantine "/Applications/AgentSushi.app" 2>/dev/null || true
   fi
 
   echo "agent-sushi activated"

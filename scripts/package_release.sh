@@ -10,7 +10,7 @@ fi
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 BUILD_DIR="$ROOT_DIR/.build-release"
-APP_PATH="$BUILD_DIR/SushiArrived.app"
+APP_PATH="$BUILD_DIR/AgentSushi.app"
 PKG_DIR="$BUILD_DIR/agent-sushi"
 TARBALL="$DIST_DIR/agent-sushi-${VERSION}.tar.gz"
 
@@ -31,7 +31,7 @@ if [ -z "$FOUND_APP" ]; then
   exit 1
 fi
 
-cp -R "$FOUND_APP" "$PKG_DIR/SushiArrived.app"
+cp -R "$FOUND_APP" "$PKG_DIR/AgentSushi.app"
 cp "$ROOT_DIR/bin/agent-sushi" "$PKG_DIR/agent-sushi"
 chmod +x "$PKG_DIR/agent-sushi"
 

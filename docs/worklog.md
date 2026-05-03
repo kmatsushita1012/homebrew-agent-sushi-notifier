@@ -24,7 +24,7 @@
 - `agent-sushi activate`
   - hook設置
   - Codex `notify` 設定を追加
-  - `SushiArrived.app` の quarantine 解除
+  - `AgentSushi.app` の quarantine 解除
 - `agent-sushi deactivate`
   - hook削除
   - `notify` 設定削除

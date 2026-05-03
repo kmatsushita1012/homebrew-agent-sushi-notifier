@@ -75,7 +75,7 @@ agent-sushi deactivate
 `activate` configures:
 - Codex: top-level `notify` in `~/.codex/config.toml`
 - Claude: adds a command hook to `hooks.Stop` only if `~/.claude/settings.json` exists
-- Notification launch: best-effort focus to Codex before opening `SushiArrived`
+- Notification launch: best-effort focus to Codex before opening `AgentSushi`
 
 ## 対応環境
 

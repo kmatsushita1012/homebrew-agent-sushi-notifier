@@ -3,7 +3,7 @@
 
 以下が修正版（最終版）👇
 
-# SushiArrived 企画・設計（最終版）
+# AgentSushi 企画・設計（最終版）
 ## 概要
 AIエージェント（Claude / Codex）のタスク完了時に、
 回転寿司の到着画面風の全画面通知を出すmacOSアプリ。
@@ -50,7 +50,7 @@ Stop
 ---
 ## 構成
 
-SushiArrived.app（表示のみ）
+AgentSushi.app（表示のみ）
 +
 sushi-hook（ロジック）
 
@@ -100,7 +100,7 @@ notify
 
 アプリ起動（内部のみ）
 
-open -a SushiArrived
+open -a AgentSushi
 
 ※ 引数なし
 
