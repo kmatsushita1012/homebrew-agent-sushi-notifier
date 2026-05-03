@@ -166,6 +166,8 @@ activate() {
 # Agent Sushi hook snippet
 agent_sushi_notify() {
   mkdir -p "$HOME/.agent-sushi"
+  # Debug: confirm the hook was actually invoked by Codex.
+  date > "$HOME/.agent-sushi/hook-fired"
   # Run in a background subshell so Codex hook returns immediately.
   # Codex may enforce a short hook timeout; blocking here can get us killed.
   (
@@ -346,6 +348,7 @@ out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 (sessions_dir / f"{session_id}.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 PY
   ) &
+  disown
   # Best-effort: bring Codex to front first so AgentSushi appears in that context.
   if command -v osascript >/dev/null 2>&1; then
     osascript -e 'tell application "Codex" to activate' >/dev/null 2>&1 || true
