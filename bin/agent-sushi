@@ -166,9 +166,11 @@ activate() {
 # Agent Sushi hook snippet
 agent_sushi_notify() {
   mkdir -p "$HOME/.agent-sushi"
-  # Wait briefly for Codex to finish writing task_complete to disk.
-  sleep 0.5
-  python3 - <<'PY'
+  # Run in a background subshell so Codex hook returns immediately.
+  # Codex may enforce a short hook timeout; blocking here can get us killed.
+  (
+    sleep 0.5
+    python3 - <<'PY'
 import json
 import time
 from datetime import datetime, timedelta
@@ -343,6 +345,7 @@ payload = {"title": title, "model": model, "session_id": session_id}
 out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 (sessions_dir / f"{session_id}.json").write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
 PY
+  ) &
   # Best-effort: bring Codex to front first so AgentSushi appears in that context.
   if command -v osascript >/dev/null 2>&1; then
     osascript -e 'tell application "Codex" to activate' >/dev/null 2>&1 || true
